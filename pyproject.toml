@@ -1,0 +1,12 @@
+[project]
+name = "urcabirds"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.13.3",
+    "birdnet>=0.2.5",
+    "sounddevice>=0.5.5",
+    "soundfile>=0.13.1",
+]
