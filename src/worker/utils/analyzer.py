@@ -13,30 +13,26 @@ def analyze_audio(filepath: Path) -> list:
     Uses the BirdNET Python API to process the generated audio snippet.
     Returns a list of dictionaries with species and confidence scores.
     """
-    logging.info(f"Analyzing {filepath} with BirdNET Python API...")
+    logging.info(f"Analysing {filepath} with BirdNET Python API...")
     detections = []
-
-    if model is None:
-        logging.warning("BirdNET not loaded. Using mock analysis data.")
-        detections.append({"species": "Columba palumbus", "confidence": 0.85})
-        if filepath.exists():
-            filepath.unlink()
-        return detections
 
     try:
         # Get predictions directly from memory
-        predictions = model.predict(str(filepath))
+        predictions = model.predict(str(filepath)).to_structured_array()
 
         # predictions is typically a pandas DataFrame
-        if predictions is not None and not predictions.empty:
-            for row in predictions.to_dict("records"):
-                species = row.get("species_name", row.get("common_name", None))
-                conf = row.get("confidence", 0.0)
+        if predictions is not None and len(predictions) > 0:
+            for row in predictions:
+                input_file = row[0]
+                species = row[3]
+                conf = row[4]
 
                 if species and float(conf) >= CONFIDENCE_THRESHOLD:
                     detections.append(
                         {"species": str(species), "confidence": float(conf)}
                     )
+
+        logging.info(f"Predictions: {predictions}")
 
     except Exception as e:
         logging.error(f"BirdNET analyzer error: {e}")

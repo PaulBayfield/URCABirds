@@ -66,8 +66,6 @@ async def process_audio_segment(
 
 # ---------- Main Execution Loop ----------
 async def main():
-    print("Main thread")
-
     logging.info(f"URCABirds Worker Node [{SENSOR_ID}] initializing...")
     init_db()
 

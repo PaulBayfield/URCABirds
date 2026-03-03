@@ -10,6 +10,6 @@ CONFIDENCE_THRESHOLD = float(os.getenv("CONFIDENCE_THRESHOLD", "0.80"))
 LATITUDE = float(os.getenv("LATITUDE", "49.24"))  # Reims, Campus Moulin de la Housse
 LONGITUDE = float(os.getenv("LONGITUDE", "4.06"))
 
-AUDIO_DURATION = 3  # Length of captured audio segment in seconds
+AUDIO_DURATION = 10  # Length of captured audio segment in seconds
 DB_PATH = "cache.db"
 LOG_PATH = "worker.log"
