@@ -1,6 +1,20 @@
 import asyncio
 
-from src.worker.worker import main
+from src.worker.worker import Worker
+from aiohttp import ClientSession
+
+
+async def main():
+    """
+    Main function to run the worker.
+    """
+    session = ClientSession()
+
+    worker = Worker(session)
+    await worker.run()
+    await worker.close()
+
+    await session.close()
 
 
 if __name__ == "__main__":

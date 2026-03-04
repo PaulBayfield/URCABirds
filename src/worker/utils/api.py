@@ -1,11 +1,15 @@
 import logging
 import aiohttp
 
-from src.worker.utils.db import mark_synced
+from src.worker.utils.db import Database
 from aiohttp import ClientSession
 
 
 class APIClient:
+    """
+    API Client, handles requests to the API
+    """
+
     def __init__(
         self, session: ClientSession, base_url: str, api_key: str, sensor_id: str
     ) -> None:
@@ -32,7 +36,7 @@ class APIClient:
             }
         )
 
-    async def send_detection(self, detection: dict, record_id=None) -> bool:
+    async def send_detection(self, detection: dict, database: Database, record_id=None) -> bool:
         """
         Sends the detection data to the server via POST to /detections.
         Applies the timeout of 5 seconds.
@@ -59,7 +63,7 @@ class APIClient:
 
                 # Update cache if it was successfully synced just now
                 if record_id is not None:
-                    mark_synced(record_id)
+                    database.mark_synced(record_id)
                     logging.info(f"Successfully synced cached record: {record_id}")
 
                 return True

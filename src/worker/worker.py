@@ -4,11 +4,10 @@ import time
 import os
 import concurrent.futures
 
-
 from src.worker.config import LOG_PATH, SENSOR_ID, API_URL, API_KEY
-from src.worker.utils.db import init_db, cache_detection, get_unsynced_records
-from src.worker.utils.audio import record_audio
-from src.worker.utils.analyzer import analyze_audio
+from src.worker.utils.db import Database
+from src.worker.utils.audio import Audio
+from src.worker.utils.analyser import Analyser
 from src.worker.utils.api import APIClient
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,84 +21,115 @@ logging.basicConfig(
 )
 
 
-async def sync_offline_data(api_client: APIClient):
-    """Scans local SQLite database for entries not yet sent to the API."""
-    unsynced_records = get_unsynced_records()
+class Worker:
+    """
+    Worker class for processing audio segments and sending detections to the API.
+    """
 
-    if unsynced_records:
-        logging.info(f"Attempting to sync {len(unsynced_records)} offline records.")
+    def __init__(self, session: ClientSession) -> None: 
+        """
+        Initialise the worker with a session.
 
-    for record in unsynced_records:
-        success = await api_client.send_detection(record, record_id=record["id"])
-        if not success:
-            # Quit early since network is still struggling
-            break
+        :param session: The session to use for API requests.
+        :type session: ClientSession
+        """
+        self.session = session
 
+        self.database = Database()
+        self.database.init()
 
-async def process_audio_segment(
-    filepath: Path, timestamp: str, api_client: APIClient, executor
-):
-    try:
-        # 2. Analyze the segment
-        loop = asyncio.get_running_loop()
-        detections = await loop.run_in_executor(executor, analyze_audio, filepath)
+        self.analyser = Analyser()
 
-        if detections:
-            print(detections)
+        self.api_client = APIClient(self.session, API_URL, API_KEY, SENSOR_ID)
 
-        # 3. Handle detections
-        for det in detections:
-            det["timestamp"] = timestamp
-            logging.info(
-                f"BIRD DETECTED: {det['species']} with {det['confidence']:.2f} confidence."
-            )
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=max(1, (os.cpu_count() or 2) - 1))
 
-            # Attempt to push to API immediately
-            success = await api_client.send_detection(det)
+    async def sync_offline_data(self) -> None:
+        """
+        Scans local SQLite database for entries not yet sent to the API.
+        """
+        unsynced_records = self.database.get_unsynced_records()
 
+        if unsynced_records:
+            logging.info(f"Attempting to sync {len(unsynced_records)} offline records.")
+
+        for record in unsynced_records:
+            success = await self.api_client.send_detection(record, self.database, record_id=record["id"])
             if not success:
-                # Stash offline
-                cache_detection(timestamp, det["species"], det["confidence"])
-    except Exception as e:
-        logging.error(f"Unexpected fault in processing segment: {e}", exc_info=True)
+                # Quit early since network is still struggling
+                break
 
+    async def process_audio_segment(
+        self,
+        filepath: Path,
+        timestamp: str,
+    ) -> None:
+        """
+        Process an audio segment.
 
-# ---------- Main Execution Loop ----------
-async def main():
-    logging.info(f"URCABirds Worker Node [{SENSOR_ID}] initializing...")
-    init_db()
-
-    session = ClientSession()
-    api_client = APIClient(session, API_URL, API_KEY, SENSOR_ID)
-
-    # Use multiple worker threads to process detections in parallel and prevent bottlenecking
-    max_threads = max(1, (os.cpu_count() or 2) - 1)
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_threads)
-
-    while True:
+        :param filepath: The path to the audio file.
+        :type filepath: Path
+        :param timestamp: The timestamp of the audio segment.
+        :type timestamp: str
+        """
         try:
-            # 1. Start audio segment capture with unique timestamp in a thread to avoid blocking loop
-            now_ts = datetime.now(timezone.utc).isoformat()
-            safe_ts = now_ts.replace(":", "-").replace(".", "-").replace("+", "-")
-            temp_audio_file = Path(f"capture_{safe_ts}.wav")
-
+            # 2. Analyze the segment
             loop = asyncio.get_running_loop()
-            await loop.run_in_executor(executor, record_audio, temp_audio_file)
+            detections = await loop.run_in_executor(self.executor, self.analyser.analyse_audio, filepath)
 
-            # 2. Analyze the segment asynchronously
-            asyncio.create_task(
-                process_audio_segment(temp_audio_file, now_ts, api_client, executor)
-            )
+            if detections:
+                print(detections)
 
-            # 4. Periodically try and flush offline detections
-            await sync_offline_data(api_client)
+            # 3. Handle detections
+            for det in detections:
+                det["timestamp"] = timestamp
+                logging.info(
+                    f"BIRD DETECTED: {det['species']} with {det['confidence']:.2f} confidence."
+                )
 
-        except KeyboardInterrupt:
-            logging.info("Worker Node stopped gracefully by user.")
-            executor.shutdown(wait=True)
-            await session.close()
-            break
+                # Attempt to push to API immediately
+                success = await self.api_client.send_detection(det, self.database)
+
+                if not success:
+                    # Stash offline
+                    self.database.cache_detection(timestamp, det["species"], det["confidence"])
         except Exception as e:
-            logging.error(f"Unexpected fault in detection loop: {e}", exc_info=True)
-            # Short cooldown to avoid aggressive error looping
-            time.sleep(5)
+            logging.error(f"Unexpected fault in processing segment: {e}", exc_info=True)
+
+
+    async def run(self):
+        logging.info(f"URCABirds Worker Node [{SENSOR_ID}] initializing...")
+
+        while True:
+            try:
+                # 1. Start audio segment capture with unique timestamp in a thread to avoid blocking loop
+                now_ts = datetime.now(timezone.utc).isoformat()
+                safe_ts = now_ts.replace(":", "-").replace(".", "-").replace("+", "-")
+                temp_audio_file = Path(f"./captures/capture_{safe_ts}.wav")
+
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(self.executor, Audio().record, temp_audio_file)
+
+                # 2. Analyze the segment asynchronously
+                asyncio.create_task(
+                    self.process_audio_segment(temp_audio_file, now_ts)
+                )
+
+                # 4. Periodically try and flush offline detections
+                await self.sync_offline_data()
+
+            except KeyboardInterrupt:
+                logging.info("Worker Node stopped gracefully by user.")
+                await self.close()
+                break
+            except Exception as e:
+                logging.error(f"Unexpected fault in detection loop: {e}", exc_info=True)
+                # Short cooldown to avoid aggressive error looping
+                time.sleep(5)
+
+    async def close(self) -> None:
+        """
+        Closes the worker and its resources.
+        """
+        self.executor.shutdown(wait=True)
+        await self.database.close()
