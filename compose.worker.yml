@@ -1,9 +1,15 @@
+# compose.worker.yml
+
+# Services
 services:
   worker:
+    # Build the worker image
     build:
       context: .
       dockerfile: Dockerfile.worker
+    # Container name
     container_name: worker
+    # Environment variables
     environment:
       - API_URL=${API_URL}
       - API_KEY=${API_KEY}
@@ -11,3 +17,5 @@ services:
       - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD}
       - LATITUDE=${LATITUDE}
       - LONGITUDE=${LONGITUDE}
+    # Restart policy
+    restart: unless-stopped
