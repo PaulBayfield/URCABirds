@@ -1,0 +1,13 @@
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: worker
+    environment:
+      - API_URL=${API_URL}
+      - API_KEY=${API_KEY}
+      - SENSOR_ID=${SENSOR_ID}
+      - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD}
+      - LATITUDE=${LATITUDE}
+      - LONGITUDE=${LONGITUDE}

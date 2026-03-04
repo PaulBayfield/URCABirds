@@ -1,6 +1,6 @@
 import asyncio
 
-from src.worker.worker import Worker
+from .worker import Worker
 from aiohttp import ClientSession
 
 
