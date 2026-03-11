@@ -3,7 +3,7 @@ import time
 import sounddevice as sd
 import soundfile as sf
 
-from src.worker.config import AUDIO_DURATION
+from config import AUDIO_DURATION
 from pathlib import Path
 
 
@@ -19,7 +19,7 @@ class Audio:
         self.fs = 44100
         self.channels = 2
 
-    def record(self, filepath: Path) -> None: 
+    def record(self, filepath: Path) -> None:
         """
         Captures audio for the configured duration. Uses sounddevice and soundfile.
         Fallback to a mock method during local testing off-device.
@@ -31,7 +31,10 @@ class Audio:
 
         try:
             recording = sd.rec(
-                int(AUDIO_DURATION * self.fs), samplerate=self.fs, channels=self.channels, dtype="int16"
+                int(AUDIO_DURATION * self.fs),
+                samplerate=self.fs,
+                channels=self.channels,
+                dtype="int16",
             )
 
             sd.wait()
