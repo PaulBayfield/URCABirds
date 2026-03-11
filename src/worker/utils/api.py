@@ -1,7 +1,7 @@
 import logging
 import aiohttp
 
-from src.worker.utils.db import Database
+from .db import Database
 from aiohttp import ClientSession
 
 
@@ -36,7 +36,58 @@ class APIClient:
             }
         )
 
-    async def send_detection(self, detection: dict, database: Database, record_id=None) -> bool:
+    async def register_sensor(
+        self,
+        name: str,
+        latitude: float,
+        longitude: float,
+        description: str | None = None,
+    ) -> bool:
+        """
+        Registers (or updates) this sensor via POST /v1/sensors/register.
+        Updates last_connection on every call; sets first_registered on first call.
+
+        :param name: Human-readable name of the sensor.
+        :type name: str
+        :param latitude: Latitude of the sensor.
+        :type latitude: float
+        :param longitude: Longitude of the sensor.
+        :type longitude: float
+        :param description: Optional description.
+        :type description: str | None
+        :return: True if successful, False otherwise.
+        :rtype: bool
+        """
+        payload = {
+            "sensor_id": self.sensor_id,
+            "name": name,
+            "latitude": latitude,
+            "longitude": longitude,
+        }
+        if description:
+            payload["description"] = description
+
+        try:
+            async with self.session.post(
+                f"{self.base_url}/sensors/register", json=payload, timeout=10.0
+            ) as response:
+                if response.status in (200, 201):
+                    action = "registered" if response.status == 201 else "updated"
+                    logging.info(f"Sensor '{self.sensor_id}' {action} successfully.")
+                    return True
+                else:
+                    text = await response.text()
+                    logging.warning(
+                        f"Sensor registration returned {response.status}: {text}"
+                    )
+                    return False
+        except aiohttp.ClientError as e:
+            logging.warning(f"Sensor registration failed: {e}")
+            return False
+
+    async def send_detection(
+        self, detection: dict, database: Database, record_id=None
+    ) -> bool:
         """
         Sends the detection data to the server via POST to /detections.
         Applies the timeout of 5 seconds.
