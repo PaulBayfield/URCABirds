@@ -35,7 +35,7 @@ class Ratelimiter:
     Class to manage rate limits
     """
 
-    DEFAULT = Bucket("default", 200, 60)
+    DEFAULT = Bucket("default", 100, 60)
 
     def __init__(self) -> None:
         """
