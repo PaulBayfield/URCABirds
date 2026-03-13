@@ -1,5 +1,5 @@
 
-name: Production Deployment
+name: API Production Deployment
 
 on:
   push:
@@ -52,7 +52,7 @@ jobs:
         id: push
         uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
         with:
-          context: .
+          context: ./src/api
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
