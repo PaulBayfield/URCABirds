@@ -5,7 +5,7 @@ COPY . ./URCABirdsAPI
 
 WORKDIR /URCABirdsAPI
 
-RUN uv sync --frozen
+RUN uv sync
 
 EXPOSE 7000
 
