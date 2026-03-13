@@ -1,15 +1,9 @@
 FROM python:3.13-alpine
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN apk add --no-cache git
-
 COPY . ./URCABirdsAPI
 
 WORKDIR /URCABirdsAPI
-
-RUN git submodule update --init --recursive
-
-RUN git submodule foreach git pull origin main
 
 RUN uv sync --frozen
 
