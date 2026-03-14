@@ -1,9 +1,15 @@
 import os
 
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 
 API_URL = os.getenv("API_URL")
 API_KEY = os.getenv("API_KEY")
 SENSOR_ID = os.getenv("SENSOR_ID")
+SENSOR_NAME = os.getenv("SENSOR_NAME", SENSOR_ID)
 CONFIDENCE_THRESHOLD = float(os.getenv("CONFIDENCE_THRESHOLD"))
 
 LATITUDE = float(os.getenv("LATITUDE"))

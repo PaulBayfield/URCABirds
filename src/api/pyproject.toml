@@ -1,0 +1,17 @@
+[project]
+name = "urcabirds-api"
+version = "1.0.0"
+description = "URCABirds API"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.13.3",
+    "asyncpg>=0.31.0",
+    "python-dotenv>=1.2.2",
+    "pytz>=2026.1.post1",
+    "sanic>=25.12.0",
+    "sanic-ext",
+]
+
+[tool.uv.sources]
+sanic-ext = { git = "https://github.com/PaulBayfield/sanic-ext" }

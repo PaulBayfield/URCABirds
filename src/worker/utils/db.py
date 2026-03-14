@@ -1,6 +1,6 @@
 import sqlite3
 
-from src.worker.config import DB_PATH
+from config import DB_PATH
 
 
 class Database:
@@ -54,7 +54,7 @@ class Database:
 
         self.conn.commit()
 
-    def get_unsynced_records(self) -> list: 
+    def get_unsynced_records(self) -> list:
         """
         Gets all unsynced records from the database.
 
@@ -68,7 +68,16 @@ class Database:
             """
         )
         records = self.cursor.fetchall()
-        return [dict(row) for row in records]
+
+        return [
+            {
+                "id": record[0],
+                "timestamp": record[1],
+                "species": record[2],
+                "confidence": record[3],
+            }
+            for record in records
+        ]
 
     def mark_synced(self, record_id: int) -> None:
         """
@@ -85,7 +94,7 @@ class Database:
         )
         self.conn.commit()
 
-    def close(self) -> None: 
+    def close(self) -> None:
         """
         Closes the database connection.
         """

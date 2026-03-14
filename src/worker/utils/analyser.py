@@ -1,7 +1,7 @@
 import birdnet
 import logging
 
-from src.worker.config import CONFIDENCE_THRESHOLD
+from config import CONFIDENCE_THRESHOLD
 from pathlib import Path
 
 
@@ -10,7 +10,9 @@ class Analyser:
     Analyser class for handling audio analysis.
     """
 
-    def __init__(self, model: str = "acoustic", version: str = "2.4", backend: str = "tf") -> None:
+    def __init__(
+        self, model: str = "acoustic", version: str = "2.4", backend: str = "tf"
+    ) -> None:
         """
         Initialises the Analyser with the provided model, version, and backend.
 
