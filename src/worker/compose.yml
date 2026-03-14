@@ -6,7 +6,7 @@ services:
     # Build the worker image
     build:
       context: .
-      dockerfile: Dockerfile.worker
+      dockerfile: Dockerfile
     # Container name
     container_name: worker
     # Environment variables
@@ -14,6 +14,7 @@ services:
       - API_URL=${API_URL}
       - API_KEY=${API_KEY}
       - SENSOR_ID=${SENSOR_ID}
+      - SENSOR_NAME=${SENSOR_NAME}
       - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD}
       - LATITUDE=${LATITUDE}
       - LONGITUDE=${LONGITUDE}
