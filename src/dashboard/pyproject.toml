@@ -1,0 +1,11 @@
+[project]
+name = "dashboard"
+version = "1.0.0"
+description = "URCABirds Dashboard"
+requires-python = ">=3.12"
+dependencies = [
+    "streamlit",
+    "requests",
+    "pandas",
+    "python-dotenv",
+]
