@@ -1,3 +1,4 @@
+*.wav
 cache.db
 .idea/
 tests/

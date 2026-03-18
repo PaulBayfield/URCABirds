@@ -5,7 +5,6 @@ import os
 import concurrent.futures
 
 from config import (
-    LOG_PATH,
     SENSOR_ID,
     SENSOR_NAME,
     API_URL,
@@ -26,7 +25,7 @@ from aiohttp import ClientSession
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.FileHandler(LOG_PATH), logging.StreamHandler()],
+    handlers=[logging.StreamHandler()],
 )
 
 
