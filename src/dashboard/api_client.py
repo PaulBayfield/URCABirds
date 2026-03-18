@@ -32,13 +32,13 @@ class APIClient:
         if sensor_id:
             params["sensor_id"] = sensor_id
             
-        return self._get("/detections/", params=params) or {"detections": [], "total": 0}
+        return self._get("/detections", params=params) or {"detections": [], "total": 0}
 
     def get_sensors(self) -> List[Dict[str, Any]]:
-        return self._get("/sensors/") or []
+        return self._get("/sensors") or []
         
     def get_species(self) -> List[Dict[str, Any]]:
-        return self._get("/species/") or []
+        return self._get("/species") or []
 
 # Initialize client
 load_dotenv()

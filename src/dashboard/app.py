@@ -6,7 +6,7 @@ from views import render_overview, render_detections, render_sensors, render_spe
 # App Configuration
 st.set_page_config(
     page_title="URCABirds Dashboard",
-    page_icon="🐦",
+    page_icon="../../assets/logo.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -46,7 +46,7 @@ with st.sidebar:
     st.title("URCABirds")
     st.caption("Acoustic Monitoring Dashboard")
     st.divider()
-    
+    st.logo(os.path.join(os.path.dirname(__file__), "../../assets/logo.png"), size="large")
     view_options = ["Overview", "Detections", "Sensors", "Species"]
     st.session_state.current_view = st.radio("Navigation", view_options)
     
