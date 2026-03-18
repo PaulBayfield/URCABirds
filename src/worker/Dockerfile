@@ -13,7 +13,7 @@ COPY . ./URCABIRDS
 WORKDIR /URCABIRDS
 
 # Install dependencies
-RUN uv sync --frozen
+RUN uv sync
 
 # Run the worker
 CMD ["uv", "run", "__main__.py"]
