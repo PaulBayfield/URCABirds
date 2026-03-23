@@ -1,10 +1,10 @@
 # Dockerfile.worker
 
 # Base image
-FROM python:3.13
+FROM python:3.13-slim
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+RUN pip install uv
 
 # Copy the project
 COPY . ./URCABIRDS
@@ -17,5 +17,3 @@ RUN uv sync
 
 # Run the worker
 CMD ["uv", "run", "__main__.py"]
-
-
