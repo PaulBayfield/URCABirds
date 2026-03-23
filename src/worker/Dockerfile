@@ -6,6 +6,8 @@ FROM python:3.13-slim
 # Install uv
 RUN pip install uv
 
+RUN apt install portaudio19-dev
+
 # Copy the project
 COPY . ./URCABIRDS
 
