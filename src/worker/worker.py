@@ -11,6 +11,7 @@ from config import (
     API_KEY,
     LATITUDE,
     LONGITUDE,
+    LOG_LEVEL,
 )
 from utils.db import Database
 from utils.audio import Audio
@@ -23,7 +24,7 @@ from aiohttp import ClientSession
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[logging.StreamHandler()],
 )
