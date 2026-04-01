@@ -92,8 +92,8 @@ class Worker:
                 self.executor, self.analyser.analyse_audio, filepath
             )
 
-            if detections:
-                print(detections)
+            # if detections:
+            #     print(detections)
 
             # 3. Handle detections
             for det in detections:
