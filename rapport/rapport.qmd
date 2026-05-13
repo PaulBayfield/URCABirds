@@ -1,0 +1,29 @@
+---
+title: Rapport de projet
+bibliography: refs.bib
+bibliographystyle: style.csl
+format:
+  urca-template-typst:
+    author: [
+      Paul Bayfield,
+      Lucas Charmettan
+    ]
+    cols: 1
+    date: 13/05/2026
+    lang: fr
+    margin:
+      x: 2cm
+      y: 2cm
+    section-numbering: '1.1.'
+    title: "Mise en place du suivi de trajets d'oiseaux"
+    doc: Rapport de projet • INFO0806 URCA Birds
+    toc: true
+    toc-depth: 5
+    toc-title: Table des matières
+---
+
+# Table des sigles et abréviations {#table-sigles}
+
+- **URCA** : Université de Reims Champagne-Ardenne
+
+# Introduction {#introduction}
