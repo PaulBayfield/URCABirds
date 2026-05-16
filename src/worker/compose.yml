@@ -1,15 +1,13 @@
-# compose.worker.yml
-
-# Services
 services:
   worker:
-    # Build the worker image
-    build:
-      context: .
-      dockerfile: Dockerfile
-    # Container name
+    image: paulbayfield/urcabirds-worker:latest
     container_name: worker
-    # Environment variables
+    platform: linux/arm64
+    devices:
+      - "/dev/snd:/dev/snd"
+    group_add:
+      - audio
+    ipc: host
     environment:
       - API_URL=${API_URL}
       - API_KEY=${API_KEY}
@@ -18,5 +16,5 @@ services:
       - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD}
       - LATITUDE=${LATITUDE}
       - LONGITUDE=${LONGITUDE}
-    # Restart policy
+      - LOG_LEVEL=${LOG_LEVEL}
     restart: unless-stopped
