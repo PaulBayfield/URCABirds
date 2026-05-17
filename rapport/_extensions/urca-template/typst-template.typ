@@ -220,7 +220,7 @@
     depth: toc_depth,
     indent: auto,
     target: {
-      selector(heading).after(<table-des-matières>, inclusive: false).before(<annexes>, inclusive: false)
+      selector(heading).after(<table-des-matières>, inclusive: false).before(<note>, inclusive: false)
     }
   )
 
@@ -245,6 +245,6 @@
   // let the fun begin - Quarto document
   doc
 
-  // Annexes
-  // include "./content/annexes.typ"
+  // Note
+  include "./content/note.typ"
 }
