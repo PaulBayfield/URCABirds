@@ -24,6 +24,7 @@ format:
 
 # Table des sigles et abréviations {#table-sigles}
 
+- **AMOA** : Assistance à la Maîtrise d'Ouvrage
 - **API** : Application Programming Interface
 - **CI/CD** : Continuous Integration / Continuous Deployment
 - **HTTP** : HyperText Transfer Protocol
@@ -31,7 +32,13 @@ format:
 - **IA** : Intelligence Artificielle
 - **IoT** : Internet of Things
 - **JSON** : JavaScript Object Notation
+- **KPI** : Key Performance Indicator (indicateur clé de performance)
+- **MOA** : Maîtrise d'Ouvrage
+- **MOE** : Maîtrise d'Œuvre
+- **PDCA** : Plan, Do, Check, Act
+- **RACI** : Responsible, Accountable, Consulted, Informed
 - **REST** : Representational State Transfer
+- **SMART** : Spécifique, Mesurable, Acceptable, Réaliste, Temporellement défini
 - **SQL** : Structured Query Language
 - **URCA** : Université de Reims Champagne-Ardenne
 - **WAV** : Waveform Audio File Format
@@ -46,13 +53,61 @@ Ce rapport présente l'architecture générale du système, les choix techniques
 
 # Gestion de projet {#gestion-projet}
 
+## Acteurs du projet
+
+Le projet mobilise deux catégories d'acteurs, conformément au cadre défini en gestion de projets.
+
+La Maîtrise d'Ouvrage (MOA) est représentée par l'encadrant du module INFO0806 de l'URCA, Monsieur Fouchal HACENE. Il exprime le besoin, définit les exigences fonctionnelles et valide les livrables tout au long du projet.
+
+La Maîtrise d'Œuvre (MOE) est constituée de l'équipe de développement, Paul Bayfield et Lucas Charmettan, qui assure la conception, le développement et le déploiement de l'intégralité du système.
+
+## Triangle des contraintes
+
+Le projet a été piloté en tenant compte des trois contraintes interdépendantes du triangle d'or :
+
+- **Performance** : livrer un système fonctionnel capable d'identifier des espèces aviaires avec un seuil de confiance ≥ 0,80, de transmettre les détections en temps réel et d'assurer la résilience hors-ligne du pipeline.
+- **Délais** : respecter les jalons imposés par le module. Le rendu du rapport le 1^er^ juin 2026, fourniture du lien GitHub le 8 juin 2026, soutenance orale le 11 juin 2026.
+- **Coûts** : minimiser les dépenses en s'appuyant exclusivement sur des technologies open source et des services gratuits (Docker Hub, GitHub Actions), avec un matériel mis à disposition par l'UFR.
+
+L'indisponibilité des puces 4G/5G a constitué une contrainte externe imprévue. Conformément à la logique du triangle, cette situation a nécessité un ajustement de la performance (substitution des données réelles par des données simulées) afin de préserver les délais de livraison.
+
+## Objectifs SMART
+
+Les objectifs du projet ont été formulés selon la méthode SMART :
+
+| Critère | Application au projet |
+|---------|----------------------|
+| **Spécifique** | Déployer un réseau de capteurs acoustiques pour identifier automatiquement les oiseaux sur le campus Moulin de la Housse |
+| **Mesurable** | Seuil BirdNET ≥ 0,80 ; disponibilité ≥ 95 % ; capacité ≥ 10 000 détections/jour ; support de 50+ capteurs simultanés |
+| **Acceptable** | Objectifs validés conjointement par les encadrants (MOA) et l'équipe de développement (MOE) en début de projet |
+| **Réaliste** | Technologies maîtrisées (Python, Docker, API REST), matériel accessible (Raspberry Pi 4/5) |
+| **Temporel** | Rapport au 1^er^ juin, lien GitHub au 8 juin, soutenance au 11 juin 2026 |
+
+## Répartition des responsabilités
+
+La matrice RACI ci-dessous formalise la répartition des responsabilités entre les acteurs du projet :
+
+| Tâche | Paul Bayfield | Lucas Charmettan | Encadrants (MOA) |
+|-------|:---:|:---:|:---:|
+| Architecture système | A/R | A/R | I |
+| Développement worker | A/R | A/R | I |
+| Développement API REST | A/R | C | I |
+| Pipeline CI/CD | A/R | C | I |
+| Tableau de bord | C | A/R | I |
+| Rédaction du rapport | R | R | A |
+| Validation des livrables | I | I | A |
+
+*R = Réalise • A = Approuve • C = Consulté • I = Informé*
+
 ## Méthodologie
 
-Le projet a été mené en binôme, en suivant une organisation agile inspirée de Scrum, adaptée à notre échelle. Nous avons travaillé par sprints de deux à trois semaines. Chaque sprint débutait par une séance de **planning** pour définir ce que l'on voulait accomplir et se répartir le travail, et se terminait par une **review** pour faire le point sur ce qui avait été livré et décider des ajustements pour la suite. En dehors de ces jalons, nous tenions des points hebdomadaires informels quand notre emploi du temps le permettait, afin de rester synchronisés sur l'avancement et de débloquer rapidement les éventuels problèmes.
+Le projet a été conduit en suivant une organisation agile inspirée de Scrum, adaptée à notre échelle. Nous avons travaillé par sprints de deux à trois semaines, chacun structuré autour d'un planning (définition des tâches et répartition du travail) et d'une review (bilan des livrables et ajustements pour la suite). Des points hebdomadaires informels assuraient la synchronisation continue entre les membres de l'équipe.
+
+Cette démarche itérative s'inscrit dans les trois grandes phases du cycle de vie d'un projet : le cadrage (analyse des besoins et planification, sprints 1-2), la conduite (développement et industrialisation, sprints 3-4) et la clôture (finalisation et soutenance, sprint 5). À chaque fin de sprint, une boucle PDCA (Plan-Do-Check-Act) a guidé l'amélioration continue : les points de blocage identifiés en review alimentaient directement la planification du sprint suivant.
 
 ## Sprints
 
-### Sprint 1 : Initialisation et service Worker (18 févr. – 3 mars 2026)
+### Sprint 1 : Initialisation et service Worker (18 févr. - 3 mars 2026)
 
 **Planning**
 
@@ -73,7 +128,7 @@ L'idée de départ était simple : il fallait d'abord savoir où on allait. Ce p
 
 Le pipeline fonctionne de bout en bout en local. Le worker capture des segments audio, les soumet à BirdNET et journalise les détections identifiées. L'architecture générale a été validée et la configuration via `.env` est en place.
 
-### Sprint 2 : API REST et CI/CD (4 mars – 13 mars 2026)
+### Sprint 2 : API REST et CI/CD (4 mars - 13 mars 2026)
 
 **Planning**
 
@@ -95,7 +150,7 @@ Avec le worker opérationnel, il fallait développer l'API REST côté serveur, 
 
 L'API expose l'ensemble des endpoints prévus. L'authentification et le rate limiting sont fonctionnels. Le pipeline CI/CD publie automatiquement les images sur Docker Hub à chaque push sur `main`. L'auto-enregistrement du capteur via `POST /v1/sensors/register` fonctionne correctement.
 
-### Sprint 3 : Stabilisation et support Raspberry Pi (13 mars – 1er avril 2026)
+### Sprint 3 : Stabilisation et support Raspberry Pi (13 mars - 1er avril 2026)
 
 **Planning**
 
@@ -116,7 +171,7 @@ Les premiers tests sur Raspberry Pi réel ont mis en évidence des problèmes de
 
 Les images sont désormais publiées pour `amd64` et `arm64`, ce qui permet de déployer directement depuis Docker Hub sur les Raspberry Pi 4 et 5 sans recompilation locale. La capture audio fonctionne correctement sur le matériel cible. Le service a été validé en conditions réelles sur le campus.
 
-### Sprint 4 : Maintenance et rédaction du rapport (avril – mai 2026)
+### Sprint 4 : Maintenance et rédaction du rapport (avril - mai 2026)
 
 **Planning**
 
@@ -136,7 +191,7 @@ Le gros du développement étant terminé, ce sprint s'est concentré sur la sta
 
 Le rapport est structuré et les sections principales sont rédigées. Les diagrammes sont intégrés.
 
-### Sprint 5 : Tableau de bord et finalisation (mai – 1er juin 2026, en cours)
+### Sprint 5 : Tableau de bord et finalisation (mai - 1er juin 2026, en cours)
 
 **Planning**
 
