@@ -1,0 +1,46 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Environment and secrets
+.env
+.env.*
+*.env
+
+# Python bytecode and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Test artifacts
+tests/
+test/
+.pytest_cache/
+.tox/
+
+# Coverage reports
+.coverage
+coverage.xml
+htmlcov/
+
+# Build and distribution artifacts
+build/
+dist/
+*.egg-info/
+
+# Tooling and caches
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Editor / IDE / OS files
+.vscode/
+.idea/
+.DS_Store
