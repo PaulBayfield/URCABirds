@@ -8,4 +8,8 @@ dependencies = [
     "requests",
     "pandas",
     "python-dotenv",
+    "plotly",
+    "librosa",
+    "matplotlib",
+    "numpy",
 ]
