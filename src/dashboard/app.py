@@ -6,7 +6,9 @@ import pages.detections as page_detections
 import pages.trends as page_trends
 import pages.sensors as page_sensors
 import pages.species as page_species
+import pages.movements as page_movements
 import pages.audio as page_audio
+from pages._i18n import t, LANGUAGES
 
 st.set_page_config(
     page_title="URCABirds Dashboard",
@@ -31,34 +33,35 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-if "current_view" not in st.session_state:
-    st.session_state.current_view = "Overview"
+logo_path = os.path.join(os.path.dirname(__file__), "../../assets/logo.png")
+if os.path.exists(logo_path):
+    st.logo(logo_path, size="large")
+
+if "lang" not in st.session_state:
+    st.session_state["lang"] = "Français"
+
+pg = st.navigation([
+    st.Page(page_overview.render,   title=t("nav.overview"),   icon="📊", url_path="overview",   default=True),
+    st.Page(page_movements.render,  title=t("nav.movements"),  icon="🗺️", url_path="movements"),
+    st.Page(page_detections.render, title=t("nav.detections"), icon="🔍", url_path="detections"),
+    st.Page(page_trends.render,     title=t("nav.trends"),     icon="📈", url_path="trends"),
+    st.Page(page_sensors.render,    title=t("nav.sensors"),    icon="📡", url_path="sensors"),
+    st.Page(page_species.render,    title=t("nav.species"),    icon="🦜", url_path="species"),
+    st.Page(page_audio.render,      title=t("nav.audio"),      icon="🎵", url_path="audio"),
+])
 
 with st.sidebar:
-    logo_path = os.path.join(os.path.dirname(__file__), "../../assets/logo.png")
-    if os.path.exists(logo_path):
-        st.logo(logo_path, size="large")
-
     st.markdown("## URCABirds")
-    st.caption("Acoustic Bird Monitoring · Moulin de la Housse")
+    st.caption(t("app.subtitle"))
     st.divider()
-
-    view_options = ["Overview", "Detections", "Trends", "Sensors", "Species", "Audio"]
-    st.session_state.current_view = st.radio("Navigation", view_options, label_visibility="collapsed")
-
+    st.selectbox(
+        t("app.lang_label"),
+        options=LANGUAGES,
+        key="lang",
+        label_visibility="collapsed",
+    )
     st.divider()
     api_url = os.environ.get("API_URL", "http://localhost:8000")
-    st.caption(f"API: {api_url}")
+    st.caption(f"{t('app.api_label')} {api_url}")
 
-if st.session_state.current_view == "Overview":
-    page_overview.render()
-elif st.session_state.current_view == "Detections":
-    page_detections.render()
-elif st.session_state.current_view == "Trends":
-    page_trends.render()
-elif st.session_state.current_view == "Sensors":
-    page_sensors.render()
-elif st.session_state.current_view == "Species":
-    page_species.render()
-elif st.session_state.current_view == "Audio":
-    page_audio.render()
+pg.run()
