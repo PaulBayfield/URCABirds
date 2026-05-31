@@ -5,13 +5,13 @@ import os
 import concurrent.futures
 
 from config import (
-    LOG_PATH,
     SENSOR_ID,
     SENSOR_NAME,
     API_URL,
     API_KEY,
     LATITUDE,
     LONGITUDE,
+    LOG_LEVEL,
 )
 from utils.db import Database
 from utils.audio import Audio
@@ -24,9 +24,9 @@ from aiohttp import ClientSession
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.FileHandler(LOG_PATH), logging.StreamHandler()],
+    handlers=[logging.StreamHandler()],
 )
 
 
@@ -92,8 +92,8 @@ class Worker:
                 self.executor, self.analyser.analyse_audio, filepath
             )
 
-            if detections:
-                print(detections)
+            # if detections:
+            #     print(detections)
 
             # 3. Handle detections
             for det in detections:

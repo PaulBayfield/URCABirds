@@ -4,6 +4,7 @@ from .sensors.v1_sensors import bp as RouteSensors
 from .species.v1_species import bp as RouteSpecies
 from .misc.v1_misc import bp as RouteMisc
 from .apikeys.v1_apikeys import bp as RouteApiKeys
+from .translations.v1_translations import bp as RouteTranslations
 
 # Version metadata
 __version__ = "1.0.0"
@@ -16,6 +17,7 @@ __routes__ = [
     RouteSpecies,
     RouteMisc,
     RouteApiKeys,
+    RouteTranslations,
 ]
 
 

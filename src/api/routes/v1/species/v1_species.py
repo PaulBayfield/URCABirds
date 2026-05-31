@@ -6,6 +6,7 @@ from models.exceptions import RateLimited, NotFound
 from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
+from urllib.parse import unquote
 
 
 bp = Blueprint(name="Species", url_prefix="/species", version=1, version_prefix="v")
@@ -112,6 +113,8 @@ async def getSpecies(request: Request, name: str) -> JSONResponse:
     :param name: Scientific name of the species
     :return: JSONResponse
     """
+    name = unquote(name)
+
     row = await request.app.ctx.pool.fetchrow(
         """
         SELECT

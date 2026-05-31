@@ -1,0 +1,14 @@
+[project]
+name = "worker"
+version = "1.0.0"
+description = "URCABirds Worker"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.13.3",
+    "birdnet>=0.2.5",
+    "python-dotenv>=1.2.2",
+    "pytz>=2026.1.post1",
+    "sounddevice>=0.5.5",
+    "soundfile>=0.13.1",
+]

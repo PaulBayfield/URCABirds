@@ -10,4 +10,5 @@ dependencies = []
 members = [
     "src/api",
     "src/dashboard",
+    "src/worker",
 ]

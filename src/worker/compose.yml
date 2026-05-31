@@ -1,0 +1,20 @@
+services:
+  worker:
+    image: paulbayfield/urcabirds-worker:latest
+    container_name: worker
+    platform: linux/arm64
+    devices:
+      - "/dev/snd:/dev/snd"
+    group_add:
+      - audio
+    ipc: host
+    environment:
+      - API_URL=${API_URL}
+      - API_KEY=${API_KEY}
+      - SENSOR_ID=${SENSOR_ID}
+      - SENSOR_NAME=${SENSOR_NAME}
+      - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD}
+      - LATITUDE=${LATITUDE}
+      - LONGITUDE=${LONGITUDE}
+      - LOG_LEVEL=${LOG_LEVEL}
+    restart: unless-stopped

@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
+
 
 API_URL = os.getenv("API_URL")
 API_KEY = os.getenv("API_KEY")
@@ -17,4 +20,5 @@ LONGITUDE = float(os.getenv("LONGITUDE"))
 
 AUDIO_DURATION = 10  # Length of captured audio segment in seconds
 DB_PATH = "cache.db"
-LOG_PATH = "worker.log"
+
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()

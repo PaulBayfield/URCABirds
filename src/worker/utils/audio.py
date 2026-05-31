@@ -17,7 +17,7 @@ class Audio:
         Initialises the Audio class with the default values.
         """
         self.fs = 44100
-        self.channels = 2
+        self.channels = 1
 
     def record(self, filepath: Path) -> None:
         """
