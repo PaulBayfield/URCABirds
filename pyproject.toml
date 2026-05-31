@@ -9,5 +9,6 @@ dependencies = []
 [tool.uv.workspace]
 members = [
     "src/api",
+    "src/dashboard",
     "src/worker",
 ]
