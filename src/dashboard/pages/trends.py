@@ -4,17 +4,18 @@ import plotly.express as px
 
 from api_client import client
 from pages._theme import CSCALE, LAYOUT
+from pages._i18n import t
 
 
 def render():
-    st.header("Trends")
+    st.header(t("trends.header"))
 
-    with st.spinner("Loading trend data..."):
+    with st.spinner(t("trends.loading")):
         data = client.get_detections(limit=1000)
 
     detections = data.get("detections", [])
     if not detections:
-        st.info("Not enough data to display trends yet.")
+        st.info(t("trends.empty"))
         return
 
     df = pd.DataFrame(detections)
@@ -29,8 +30,8 @@ def render():
 
     fig_daily = px.line(
         daily, x="date", y="detections",
-        title="Daily Detection Count",
-        labels={"date": "Date", "detections": "Detections"},
+        title=t("trends.daily.title"),
+        labels={"date": t("date"), "detections": t("detections")},
         color_discrete_sequence=["#4dabf7"],
     )
     fig_daily.update_traces(fill="tozeroy", fillcolor="rgba(77,171,247,0.08)", mode="lines+markers", marker_size=4)
@@ -42,8 +43,8 @@ def render():
     with col_a:
         fig_rich = px.line(
             daily, x="date", y="unique_species",
-            title="Species Richness Over Time",
-            labels={"date": "Date", "unique_species": "Unique Species"},
+            title=t("trends.richness.title"),
+            labels={"date": t("date"), "unique_species": t("trends.richness.y")},
             color_discrete_sequence=["#69db7c"],
         )
         fig_rich.update_traces(fill="tozeroy", fillcolor="rgba(105,219,124,0.08)", mode="lines+markers", marker_size=4)
@@ -57,7 +58,7 @@ def render():
 
         fig_dawn = px.bar_polar(
             hourly, r="detections", theta="hour_label",
-            title="Activity by Hour of Day",
+            title=t("trends.hourly.title"),
             color="detections",
             color_continuous_scale=CSCALE,
             category_orders={"hour_label": hour_labels},
@@ -72,18 +73,19 @@ def render():
         .agg(detections=("species", "count"), unique_species=("species", "nunique"))
         .reset_index()
     )
-    weekly["week_label"] = weekly["week_start"].dt.strftime("Week of %b %d")
+    fmt = t("trends.weekly.x_fmt")
+    weekly["week_label"] = weekly["week_start"].dt.strftime(fmt)
 
     fig_week = px.bar(
         weekly, x="week_label", y="detections",
-        title="Weekly Detection Count",
+        title=t("trends.weekly.title"),
         color="unique_species",
         color_continuous_scale=CSCALE,
-        labels={"week_label": "", "detections": "Detections", "unique_species": "Unique Species"},
+        labels={"week_label": "", "detections": t("detections"), "unique_species": t("trends.richness.y")},
         text="detections",
     )
     fig_week.update_traces(textposition="outside")
-    fig_week.update_layout(coloraxis_colorbar_title="Species", **LAYOUT)
+    fig_week.update_layout(coloraxis_colorbar_title=t("trends.weekly.colorbar"), **LAYOUT)
     st.plotly_chart(fig_week, use_container_width=True)
 
     st.divider()
@@ -94,8 +96,8 @@ def render():
 
     fig_top5 = px.line(
         top5_daily, x="date", y="count", color="species",
-        title="Top 5 Species — Daily Detection Count",
-        labels={"date": "Date", "count": "Detections", "species": "Species"},
+        title=t("trends.top5.title"),
+        labels={"date": t("date"), "count": t("detections"), "species": t("species")},
         markers=True,
     )
     fig_top5.update_traces(marker_size=4)

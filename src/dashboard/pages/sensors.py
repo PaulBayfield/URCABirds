@@ -4,16 +4,17 @@ import plotly.express as px
 
 from api_client import client
 from pages._theme import PALETTE, CSCALE, LAYOUT
+from pages._i18n import t
 
 
 def render():
-    st.header("Sensor Network")
+    st.header(t("sensors.header"))
 
-    with st.spinner("Loading sensors..."):
+    with st.spinner(t("sensors.loading")):
         sensors = client.get_sensors()
 
     if not sensors:
-        st.info("No sensors registered yet.")
+        st.info(t("sensors.empty"))
         return
 
     df = pd.DataFrame(sensors)
@@ -21,7 +22,7 @@ def render():
     if "latitude" in df.columns and "longitude" in df.columns:
         map_df = df.dropna(subset=["latitude", "longitude"])
         if not map_df.empty:
-            st.subheader("Campus Map")
+            st.subheader(t("sensors.map.header"))
             has_size = "total_detections" in map_df.columns and map_df["total_detections"].sum() > 0
             hover_cols = {c: True for c in ["sensor_id", "total_detections", "description"] if c in map_df.columns}
             fig_map = px.scatter_mapbox(
@@ -51,10 +52,10 @@ def render():
             fig_bar = px.bar(
                 df.sort_values("total_detections", ascending=True),
                 x="total_detections", y="name", orientation="h",
-                title="Total Detections per Sensor",
+                title=t("sensors.bar.title"),
                 color="total_detections",
                 color_continuous_scale=CSCALE,
-                labels={"total_detections": "Detections", "name": ""},
+                labels={"total_detections": t("detections"), "name": ""},
             )
             fig_bar.update_layout(coloraxis_showscale=False, **LAYOUT)
             st.plotly_chart(fig_bar, use_container_width=True)
@@ -63,7 +64,7 @@ def render():
         if "total_detections" in df.columns and df["total_detections"].sum() > 0:
             fig_pie = px.pie(
                 df, values="total_detections", names="name",
-                title="Sensor Detection Share",
+                title=t("sensors.pie.title"),
                 color_discrete_sequence=PALETTE,
                 hole=0.3,
             )
@@ -71,7 +72,7 @@ def render():
             fig_pie.update_layout(showlegend=False, **LAYOUT)
             st.plotly_chart(fig_pie, use_container_width=True)
 
-    st.subheader("Sensor Directory")
+    st.subheader(t("sensors.table.header"))
     for col in ["first_registered", "last_connection", "last_detection"]:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col])

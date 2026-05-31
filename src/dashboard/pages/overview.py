@@ -4,12 +4,13 @@ import plotly.express as px
 
 from api_client import client
 from pages._theme import PALETTE, CSCALE, LAYOUT
+from pages._i18n import t, day_map, day_order
 
 
 def render():
-    st.header("Overview")
+    st.header(t("overview.header"))
 
-    with st.spinner("Loading dashboard data..."):
+    with st.spinner(t("loading")):
         sensors = client.get_sensors()
         species = client.get_species()
         meta = client.get_detections(limit=1)
@@ -21,14 +22,14 @@ def render():
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Total Detections", f"{total_detections:,}",
-                  help="Total vocalizations detected across all sensors")
+        st.metric(t("overview.metric.total"), f"{total_detections:,}",
+                  help=t("overview.metric.total.help"))
     with col2:
-        st.metric("Active Sensors", active_sensors,
-                  help="Acoustic sensors deployed on campus")
+        st.metric(t("overview.metric.sensors"), active_sensors,
+                  help=t("overview.metric.sensors.help"))
     with col3:
-        st.metric("Species Identified", total_species,
-                  help="Unique bird species detected by BirdNET")
+        st.metric(t("overview.metric.species"), total_species,
+                  help=t("overview.metric.species.help"))
 
     st.divider()
 
@@ -41,7 +42,7 @@ def render():
                 top10 = sp_df.nlargest(10, "total_detections")
                 fig = px.pie(
                     top10, values="total_detections", names="name",
-                    title="Top 10 Species Distribution",
+                    title=t("overview.pie.title"),
                     hole=0.45,
                     color_discrete_sequence=PALETTE,
                 )
@@ -56,10 +57,10 @@ def render():
                 fig = px.bar(
                     sen_df.sort_values("total_detections", ascending=True),
                     x="total_detections", y="name", orientation="h",
-                    title="Detections per Sensor",
+                    title=t("overview.bar.title"),
                     color="total_detections",
                     color_continuous_scale=CSCALE,
-                    labels={"total_detections": "Detections", "name": ""},
+                    labels={"total_detections": t("detections"), "name": ""},
                 )
                 fig.update_layout(coloraxis_showscale=False, **LAYOUT)
                 st.plotly_chart(fig, use_container_width=True)
@@ -71,10 +72,13 @@ def render():
         trend_df["hour"] = trend_df["timestamp"].dt.hour
         trend_df["day_of_week"] = trend_df["timestamp"].dt.day_name()
 
-        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        heatmap_data = trend_df.groupby(["day_of_week", "hour"]).size().reset_index(name="count")
-        pivot = heatmap_data.pivot(index="day_of_week", columns="hour", values="count").fillna(0)
-        pivot = pivot.reindex([d for d in day_order if d in pivot.index])
+        dm = day_map()
+        trend_df["day_label"] = trend_df["day_of_week"].map(dm)
+        dorder = day_order()
+
+        heatmap_data = trend_df.groupby(["day_label", "hour"]).size().reset_index(name="count")
+        pivot = heatmap_data.pivot(index="day_label", columns="hour", values="count").fillna(0)
+        pivot = pivot.reindex([d for d in dorder if d in pivot.index])
         for h in range(24):
             if h not in pivot.columns:
                 pivot[h] = 0
@@ -82,8 +86,8 @@ def render():
 
         fig_heat = px.imshow(
             pivot,
-            title="Activity Heatmap — Hour of Day × Day of Week",
-            labels=dict(x="Hour of Day", y="", color="Detections"),
+            title=t("overview.heatmap.title"),
+            labels=dict(x=t("hour"), y="", color=t("overview.heatmap.color")),
             color_continuous_scale=CSCALE,
             aspect="auto",
         )
@@ -93,16 +97,16 @@ def render():
 
         fig_trend = px.histogram(
             trend_df, x="timestamp",
-            title=f"Detection Activity Over Time (last {len(detections_list)} records)",
+            title=t("overview.histogram.title", n=len(detections_list)),
             nbins=40,
             color_discrete_sequence=["#4dabf7"],
-            labels={"timestamp": "Time"},
+            labels={"timestamp": t("time")},
         )
-        fig_trend.update_layout(bargap=0.05, yaxis_title="Detections", **LAYOUT)
+        fig_trend.update_layout(bargap=0.05, yaxis_title=t("detections"), **LAYOUT)
         st.plotly_chart(fig_trend, use_container_width=True)
 
     st.divider()
-    st.subheader("Recent Activity")
+    st.subheader(t("overview.recent.header"))
     recent10 = client.get_detections(limit=10)
     df = pd.DataFrame(recent10.get("detections", []))
     if not df.empty:
@@ -110,13 +114,13 @@ def render():
         st.dataframe(
             df[["timestamp", "species", "sensor_id", "confidence"]],
             column_config={
-                "timestamp": st.column_config.DatetimeColumn("Detected At", format="MMM DD, YYYY, h:mm a"),
-                "species": "Species",
-                "sensor_id": "Sensor",
-                "confidence": st.column_config.ProgressColumn("Confidence", min_value=0.0, max_value=1.0),
+                "timestamp": st.column_config.DatetimeColumn(t("detected_at"), format=t("datetime_format")),
+                "species": t("species"),
+                "sensor_id": t("sensor"),
+                "confidence": st.column_config.ProgressColumn(t("confidence"), min_value=0.0, max_value=1.0),
             },
             hide_index=True,
             use_container_width=True,
         )
     else:
-        st.info("No detections recorded yet.")
+        st.info(t("overview.no_detections"))
