@@ -1,20 +1,26 @@
-
-name: API Production Deployment
+name: Dashboard Deployment
 
 on:
   push:
     branches:
       - main
     paths:
-      - "src/api/**"
-      - ".github/workflows/api-deployment.yaml"
+      - "src/dashboard/**"
+      - ".github/workflows/dashboard-deployment.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/dashboard/**"
+      - ".github/workflows/dashboard-deployment.yml"
 
 env:
   REGISTRY: ${{ secrets.REGISTRY_URL }}
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}-dashboard
 
 jobs:
   build:
+    name: Build & Push
     runs-on: ubuntu-latest
 
     permissions:
@@ -25,6 +31,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Log in to the Container registry
+        if: github.event_name == 'push'
         uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2
         with:
           registry: ${{ env.REGISTRY }}
@@ -52,11 +59,10 @@ jobs:
           driver: docker-container
 
       - name: Build and push Docker image
-        id: push
         uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
         with:
-          context: ./src/api
-          push: true
+          context: ./src/dashboard
+          push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
