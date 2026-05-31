@@ -77,7 +77,7 @@ def render():
         return
 
     df = pd.DataFrame(detections)
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df["timestamp"] = pd.to_datetime(df["timestamp"], format="ISO8601", utc=True)
     df["sensor_name"] = df["sensor_id"].map(lambda sid: sensor_map.get(sid, {}).get("name", sid))
 
     n_sensors = df["sensor_id"].nunique()

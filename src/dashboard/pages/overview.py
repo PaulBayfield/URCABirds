@@ -68,7 +68,7 @@ def render():
     detections_list = recent.get("detections", [])
     if detections_list:
         trend_df = pd.DataFrame(detections_list)
-        trend_df["timestamp"] = pd.to_datetime(trend_df["timestamp"])
+        trend_df["timestamp"] = pd.to_datetime(trend_df["timestamp"], format="ISO8601", utc=True)
         trend_df["hour"] = trend_df["timestamp"].dt.hour
         trend_df["day_of_week"] = trend_df["timestamp"].dt.day_name()
 
@@ -110,7 +110,7 @@ def render():
     recent10 = client.get_detections(limit=10)
     df = pd.DataFrame(recent10.get("detections", []))
     if not df.empty:
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df["timestamp"] = pd.to_datetime(df["timestamp"], format="ISO8601", utc=True)
         st.dataframe(
             df[["timestamp", "species", "sensor_id", "confidence"]],
             column_config={

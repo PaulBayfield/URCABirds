@@ -35,7 +35,7 @@ def render():
         return
 
     df = pd.DataFrame(detections)
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df["timestamp"] = pd.to_datetime(df["timestamp"], format="ISO8601", utc=True)
 
     col_a, col_b = st.columns(2)
 

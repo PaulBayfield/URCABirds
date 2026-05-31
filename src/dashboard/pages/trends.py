@@ -19,7 +19,7 @@ def render():
         return
 
     df = pd.DataFrame(detections)
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df["timestamp"] = pd.to_datetime(df["timestamp"], format="ISO8601", utc=True)
     df["date"] = df["timestamp"].dt.normalize()
     df["hour"] = df["timestamp"].dt.hour
     df["week_start"] = df["timestamp"].dt.to_period("W").apply(lambda p: p.start_time)

@@ -19,7 +19,7 @@ def render():
 
     df = pd.DataFrame(species)
     if "last_detection" in df.columns:
-        df["last_detection"] = pd.to_datetime(df["last_detection"])
+        df["last_detection"] = pd.to_datetime(df["last_detection"], format="ISO8601", utc=True)
 
     total_obs = int(df["total_detections"].sum()) if "total_detections" in df.columns else 0
     st.caption(t("species.caption", n=len(df), total=f"{total_obs:,}"))

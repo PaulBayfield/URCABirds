@@ -75,6 +75,6 @@ def render():
     st.subheader(t("sensors.table.header"))
     for col in ["first_registered", "last_connection", "last_detection"]:
         if col in df.columns:
-            df[col] = pd.to_datetime(df[col])
+            df[col] = pd.to_datetime(df[col], format="ISO8601", utc=True)
     display_cols = [c for c in ["name", "sensor_id", "description", "total_detections", "last_connection"] if c in df.columns]
     st.dataframe(df[display_cols], hide_index=True, use_container_width=True)
