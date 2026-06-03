@@ -1,73 +1,37 @@
-Cahier des charges
+<div align="center">
 
+# URCABirds
+URCABirds est un projet de suivi d'oiseaux sur le campus universitaire Moulin de la Housse à l'aide de capteurs audio Raspberry Pi et du modèle open-source BirdNET.
 
-# 1. Contexte et définition du problème
+</div>
 
-→ Mise en place du suivi de trajets d’oiseaux dans un environnement surveillé
+# 📖 • Sommaire
 
+- [🚀 • Présentation](#--présentation)
+- [🛠️ • Technologies](#--technologies)
+- [📦 • Installation](#--installation)
+- [⚙️ • Variables d'environnement](#--variables-denvironnement)
+- [📡 • Endpoints](#--endpoints)
+- [📃 • Crédits](#--crédits)
+- [📝 • License](#--license)
 
-# 2. Objectifs du projet
+# 🚀 • Présentation
 
-Mettre en place un suivi d’oiseaux sur le campus universitaire Moulin de la Housse à l’aide de plusieurs Raspberry Pi et des sons émis par les différentes espèces.
+Ce dépôt contient l'ensemble du projet URCABirds, composé de trois modules :
 
+- **Worker** - script embarqué sur chaque Raspberry Pi qui capture l'audio, analyse les sons avec BirdNET et envoie les détections à l'API.
+- **API** - serveur REST qui reçoit, stocke et expose les données de détection.
+- **Dashboard** - interface web Streamlit pour visualiser les détections en temps réel.
 
-# 3. Périmètre du projet
-
-→ Se concentrer sur un environnement surveillé, dans notre cas le campus universitaire Moulin de la Housse.
-
-
-# 4. Description fonctionnelle des besoins
-
-→ 3 Raspberry Pi ou plus.
-
-→ Un serveur centrale avec une API pour collecter les données.
-
-→ Un dashboard pour suivre en temps réel les oiseaux.
-
-
-→ Utiliser le modèle open-source de BirdNET : <https://github.com/birdnet-team/BirdNET-Analyzer>
-
-
-# 5. Architecture technique
-
-→ Capteurs audio → Raspberry Pi → API → Base de données → Dashboard Web
-
-
-**Composants matériels**
-
-* Raspberry Pi 4
-* Microphones
-* Serveur Linux
-* Connexion réseau (Wi-Fi ou Ethernet)
-
-
-**Composants logiciels**
-
-* BirdNET-Analyzer
-* API (Sanic - Python)
-* Base de données (PostgreSQL)
-* Interface web (React, Streamlit ?)
-
-
----
-Spécifications techniques
-
-# 1. Contexte et définition du problème
-
-→ Mise en place du suivi de trajets d’oiseaux dans un environnement surveillé
-
-
-# 2. Architecture technique détaillée
-
-Le système repose sur une architecture distribuée composée de :
-
-
-1. Nœuds de capture (Raspberry Pi + microphones)
-2. Serveur central
-3. Base de données
-4. API REST
-5. Dashboard Web
-
+Fonctionnalités principales :
+- Capture audio en continu depuis un microphone USB
+- Analyse locale par [BirdNET-Analyzer](https://github.com/birdnet-team/BirdNET-Analyzer) avec seuil de confiance configurable
+- Envoi automatique des détections vers l'API (authentification par clé API)
+- Auto-enregistrement du capteur au démarrage (position GPS, nom)
+- API REST avec documentation OpenAPI interactive (Scalar UI)
+- Dashboard interactif : carte des capteurs, graphiques temporels, tableau des espèces
+- Rate limiting par IP avec buckets configurables
+- Traductions EN/FR des noms scientifiques BirdNET
 
 Flux de données :
 
@@ -76,205 +40,224 @@ flowchart LR
     subgraph Capteurs
         RPI1[Raspberry Pi 1]
         RPI2[Raspberry Pi 2]
-        RPI3[Raspberry Pi 3]
-    end
-
-    subgraph Serveur Centrale
-        RPI1 -->|Analyse BirdNET| API
-        RPI2 -->|Analyse BirdNET| API
-        RPI3 -->|Analyse BirdNET| API
-
-        API --> DB[(Base de données PostgreSQL)]
-    end
-
-    API --> DASH[Dashboard Web]
-    DASH -->|Requêtes HTTP| API
-```
-
-
-# 3. Spécifications Matérielles
-
-* Raspberry Pi
-  * Modèle : Raspberry Pi 4 ou 5
-  * Stockage : Carte microSD
-  * Connectivité : Wi-Fi
-* Microphones
-  * Type : Microphone USB
-  * Sensibilité adaptée à captation extérieure
-  * Protection anti-vent
-* Boîtier
-  * Boîtier étanche IP65 minimum
-  * Protection contre pluie, humidité et poussière
-  * Fixation sécurisée
-* Serveur Central
-  * OS : Linux, Ubuntu Server
-  * CPU : 4 cœurs
-  * RAM : 16 Go
-  * Stockage : 500 Go
-  * Données redondées sur un disque externe
-
-
-```mermaid
-flowchart TB
-    subgraph Raspberry_Pi
-        Audio[Capture Audio]
-        Analyzer[BirdNET Analyzer]
-        Sender[Client API HTTP]
+        RPI3[Raspberry Pi N]
     end
 
     subgraph Serveur
-        API[API REST]
-        DB[(PostgreSQL)]
-        Auth[Authentification]
+        RPI1 -->|BirdNET + HTTP| API
+        RPI2 -->|BirdNET + HTTP| API
+        RPI3 -->|BirdNET + HTTP| API
+
+        API --> DB[(PostgreSQL)]
     end
 
-    subgraph Frontend
-        WebApp[Dashboard Streamlit]
-        Charts[Graphiques]
-        Map[Carte Interactive]
-    end
-
-    Audio --> Analyzer
-    Analyzer --> Sender
-    Sender --> API
-    API --> DB
-    API --> Auth
-    WebApp --> API
-    WebApp --> Charts
-    WebApp --> Map
+    API --> DASH[Dashboard Streamlit]
+    DASH -->|Requêtes HTTP| API
 ```
 
+# 🛠️ • Technologies
 
-# 4. Spécifications Logicielles
+### API
 
-## 4.1. Système embarqué (Raspberry Pi)
+| Composant | Technologie |
+|---|---|
+| Framework web | [Sanic](https://sanic.dev/) `>=25.12` |
+| Base de données | [PostgreSQL](https://www.postgresql.org/) via [asyncpg](https://github.com/MagicStack/asyncpg) `>=0.31` |
+| Client HTTP | [aiohttp](https://docs.aiohttp.org/) `>=3.13` |
+| Documentation API | [sanic-ext](https://github.com/PaulBayfield/sanic-ext) (fork) + [Scalar](https://scalar.com/) |
+| Gestionnaire de paquets | [uv](https://github.com/astral-sh/uv) |
+| Conteneurisation | [Docker](https://www.docker.com/) + [Docker Compose](https://docs.docker.com/compose/) |
 
-* OS : Raspberry Pi OS
-* Python 3.11+
-* BirdNET-Analyzer installé localement
-* Script Python pour :
-  * Capture audio
-  * Analyse par BirdNET
-  * Envoi vers API
-* Docker 29+
-* Un conteneur Docker / script Python
+### Worker
 
+| Composant | Technologie |
+|---|---|
+| Analyse acoustique | [BirdNET](https://github.com/birdnet-team/BirdNET-Analyzer) `>=0.2.5` |
+| Capture audio | [sounddevice](https://python-sounddevice.readthedocs.io/) `>=0.5.5` |
+| Lecture/écriture audio | [soundfile](https://python-soundfile.readthedocs.io/) `>=0.13.1` |
+| Client HTTP | [aiohttp](https://docs.aiohttp.org/) `>=3.13` |
+| Gestionnaire de paquets | [uv](https://github.com/astral-sh/uv) |
+| Conteneurisation | [Docker](https://www.docker.com/) + [Docker Compose](https://docs.docker.com/compose/) |
 
-## 4.2. Paramètres BirdNET
+### Dashboard
 
-* Durée des segments audio : 3 secondes
-* Seuil de confiance configurable (par défaut : 0.80)
-* Région : Europe
-* Mode : Analyse en temps réel
+| Composant | Technologie |
+|---|---|
+| Framework web | [Streamlit](https://streamlit.io/) `>=1.58` |
+| Graphiques | [Plotly](https://plotly.com/python/) `>=6.6` |
+| Traitement de données | [pandas](https://pandas.pydata.org/) `>=2.3` |
+| Analyse audio | [librosa](https://librosa.org/) `>=0.11` |
+| Client HTTP | [requests](https://docs.python-requests.org/) `>=2.32` |
 
+# 📦 • Installation
 
-## 4.3. API Serveur
+### Worker - avec Docker (recommandé pour Raspberry Pi)
 
-→ API REST sécurisée (HTTPS)
+Vous aurez besoin de [Docker](https://www.docker.com/) et de [Docker Compose](https://docs.docker.com/compose/) installés sur votre Raspberry Pi.
 
-→ Framework Sanic
-
-
-* Endpoints principaux
-  * POST /detections
-  * GET /detections
-    * Filtrage par date
-    * Filtrage par espèce
-    * Pagination
-* GET /statistics
-  * Nombre total de détections
-  * Répartition par espèce
-  * Données journalières
-
-
-## 4.4. Base de Données
-
-→ SGBD : PostgreSQL
-
-
-* Tables nécessaires
-  * Table sensors
-  * Table species
-  * Table détections
-
-
-## 5. Spécifications Réseau
-
-* Communication HTTPS obligatoire
-* Authentification par clé API
-* Timeout max : 5 secondes
-* Mise en cache locale si perte réseau
-* Synchronisation différée en cas d’indisponibilité
-
-
-# 6. Spécifications du Dashboard
-
-## 6.1. Technologies
-
-* Frontend : Streamlit
-* Backend : API REST
-
-
-## 6.2. Fonctionnalités
-
-* Carte interactive des capteurs
-* Graphique temporel des détections
-* Filtrage dynamique
-* Tableau des espèces détectées
-* Export CSV
-
-
-# 7. Processus
-
-→ Diagramme de séquence de détection d’un oiseau :
-
-```mermaid
-sequenceDiagram
-    participant Mic as Microphone
-    participant RPI as Raspberry Pi
-    participant BirdNET
-    participant API
-    participant DB
-    participant Dashboard
-
-    Mic->>RPI: Capture audio (3 sec)
-    RPI->>BirdNET: Analyse segment audio
-    BirdNET-->>RPI: Espèce + Score confiance
-    RPI->>API: POST /detections (JSON)
-    API->>DB: Insert détection
-    Dashboard->>API: GET /detections
-    API-->>Dashboard: Données mises à jour
+```bash
+curl -O https://raw.githubusercontent.com/PaulBayfield/URCABirds/main/src/worker/compose.yml
 ```
 
+Créez un fichier `.env` dans le même répertoire (voir [Variables d'environnement - Worker](#worker-1)), puis lancez :
 
-# 8. Exigences de Performance
+```bash
+docker compose up -d
+```
 
-* Analyse locale < 3 secondes par segment audio
-* Envoi des données < 2 secondes
-* Disponibilité système ≥ 95 %
-* Gestion de 10 000 détections / jour minimum
+---
 
+### API - avec Docker (recommandé)
 
-# 9. Gestion des Logs
+```bash
+git clone https://github.com/PaulBayfield/URCABirds
+cd URCABirds
+```
 
-Chaque Raspberry Pi doit enregistrer :
+Créez un fichier `.env` à la racine du projet (voir [Variables d'environnement - API](#api-1)), puis lancez :
 
-* Démarrage du service
-* Erreurs BirdNET
-* Échecs d’envoi API
-* État réseau
+```bash
+docker compose up -d
+```
 
-Logs conservés minimum 30 jours.
+L'API sera disponible sur `http://localhost:7000`.
 
+---
 
-# 10. Scalabilité
+### En local (développement)
 
-Le système doit permettre :
+Vous aurez besoin de [Python 3.13+](https://www.python.org/) et de [uv](https://github.com/astral-sh/uv).
 
-* L’ajout simple de nouveaux capteurs
-* L’augmentation du volume de données
-* Le déploiement sur d’autres sites
+```bash
+git clone https://github.com/PaulBayfield/URCABirds
+cd URCABirds
+uv sync
+```
 
-Architecture conçue pour supporter 50+ capteurs sans modification majeure.
+Démarrez l'API :
 
+```bash
+uv run src/api/__main__.py
+```
 
+Démarrez le dashboard :
+
+```bash
+uv run streamlit run src/dashboard/main.py
+```
+
+# ⚙️ • Variables d'environnement
+
+### API
+
+Créez un fichier `.env` dans `src/api/` en vous basant sur `.env.example` :
+
+```env
+# PostgreSQL
+POSTGRES_DATABASE=URCABirds
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+
+# API
+API_DOMAIN=http://localhost:7000
+API_PORT=7000
+API_DEBUG=False
+```
+
+| Variable | Description | Valeur par défaut |
+|---|---|---|
+| `POSTGRES_DATABASE` | Nom de la base de données | `URCABirds` |
+| `POSTGRES_USER` | Utilisateur PostgreSQL | - |
+| `POSTGRES_PASSWORD` | Mot de passe PostgreSQL | - |
+| `POSTGRES_HOST` | Hôte PostgreSQL | `localhost` |
+| `POSTGRES_PORT` | Port PostgreSQL | `5432` |
+| `API_DOMAIN` | URL publique de l'API (utilisée dans la doc OpenAPI) | `http://localhost:7000` |
+| `API_PORT` | Port d'écoute du serveur | `7000` |
+| `API_DEBUG` | Active le mode debug Sanic | `False` |
+
+### Worker
+
+Créez un fichier `.env` dans le répertoire du worker en vous basant sur `src/worker/.env.example` :
+
+```env
+API_URL=https://urcabirds.bayfield.dev/v1
+API_KEY=
+SENSOR_ID=sensor-001
+SENSOR_NAME=Raspi Campus          # Optionnel (défaut : SENSOR_ID)
+CONFIDENCE_THRESHOLD=0.5
+LATITUDE=49.2429809
+LONGITUDE=4.0590846
+LOG_LEVEL=INFO                    # DEBUG, INFO, WARNING, ERROR
+```
+
+| Variable | Description | Valeur par défaut |
+|---|---|---|
+| `API_URL` | URL de base de l'API (sans slash final) | - |
+| `API_KEY` | Clé API pour l'authentification | - |
+| `SENSOR_ID` | Identifiant unique du capteur | - |
+| `SENSOR_NAME` | Nom lisible du capteur | `SENSOR_ID` |
+| `CONFIDENCE_THRESHOLD` | Seuil de confiance BirdNET (0.0 – 1.0) | - |
+| `LATITUDE` | Latitude GPS du capteur | - |
+| `LONGITUDE` | Longitude GPS du capteur | - |
+| `LOG_LEVEL` | Niveau de log | `INFO` |
+
+### Dashboard
+
+Créez un fichier `.env` dans `src/dashboard/` en vous basant sur `src/dashboard/.env.example` :
+
+```env
+API_URL=https://urcabirds.bayfield.dev
+```
+
+| Variable | Description |
+|---|---|
+| `API_URL` | URL publique de l'API (sans `/v1`) |
+
+# 📡 • Endpoints
+
+La documentation interactive complète est disponible à la racine de l'API (ex : `http://localhost:7000`).
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| `GET` | `/v1/status` | Statut de l'API |
+| `GET` | `/v1/stats` | Statistiques globales (détections, capteurs, espèces) |
+| `GET` | `/v1/detections` | Liste paginée des détections (filtres : `species`, `sensor_id`, `limit`, `offset`) |
+| `POST` | `/v1/detections` | Soumettre une détection (authentification requise) |
+| `GET` | `/v1/detections/{id}` | Détails d'une détection |
+| `GET` | `/v1/sensors` | Liste de tous les capteurs enregistrés |
+| `POST` | `/v1/sensors/register` | Enregistrer ou mettre à jour un capteur (authentification requise) |
+| `GET` | `/v1/sensors/{sensor_id}` | Détails et statistiques d'un capteur |
+| `GET` | `/v1/species` | Liste de toutes les espèces observées |
+| `GET` | `/v1/species/{name}` | Statistiques d'une espèce (nom scientifique) |
+| `GET` | `/v1/translations` | Table de traductions EN/FR des noms BirdNET (recherche, pagination) |
+| `GET` | `/v1/translations/{scientific_name}` | Traduction EN/FR d'une espèce |
+| `GET` | `/v1/apikeys` | Liste des clés API (admin uniquement) |
+| `POST` | `/v1/apikeys` | Créer une clé API (admin uniquement) |
+| `DELETE` | `/v1/apikeys/{id}` | Supprimer une clé API (admin uniquement) |
+
+# 📃 • Crédits
+
+- [Paul Bayfield](https://github.com/PaulBayfield) - Développeur principal
+- [BirdNET Team](https://github.com/birdnet-team/BirdNET-Analyzer) - Modèle d'analyse acoustique
+
+# 📝 • License
+
+URCABirds est sous licence [Apache 2.0](LICENSE).
+
+```
+Copyright 2026 Paul BAYFIELD & Lucas CHARMETTAN
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
