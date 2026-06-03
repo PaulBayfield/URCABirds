@@ -195,7 +195,7 @@
   toc_depth: none,
   toc_title: none,
   doc,
-) = context {
+) = {
   set text(lang: lang, font: "Inter", hyphenate: false, size: 11pt)
   // set text(font: "Aptos", size: 11pt)
   // set heading(numbering: sectionnumbering)
@@ -225,17 +225,18 @@
   )
 
   // If figures are present, add a list of figures
-  if query(figure).len() > 0 {
-    // Table of Figures
-    heading("Table des figures", level: 1)
-    outline(
-      title: none, 
-      indent: false,
-      target: {
-        selector(figure).before(<annexes>, inclusive: false)
-      },
-      fill: repeat([..])
-    )
+  context {
+    if query(figure).len() > 0 {
+      // Table of Figures
+      heading("Table des figures", level: 1)
+      outline(
+        title: none,
+        indent: 0pt,
+        target: {
+          selector(figure).before(<annexes>, inclusive: false)
+        },
+      )
+    }
   }
 
   set par(

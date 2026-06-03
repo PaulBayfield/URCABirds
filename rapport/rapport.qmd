@@ -437,7 +437,123 @@ Un pipeline GitHub Actions est configuré pour l'API (`api-deployment.yaml`). Il
 
 # 7. Interface graphique {#dashboard}
 
-TODO
+## 7.1. Présentation générale
+
+Le tableau de bord est développé avec Streamlit [@streamlit], un framework Python permettant de créer des applications web interactives sans écrire de HTML ou de JavaScript. Les visualisations sont réalisées avec Plotly Express [@plotly] pour les graphiques interactifs, et Matplotlib couplé à librosa [@librosa] pour les représentations spectrales. L'application est disponible en français et en anglais grâce à un module d'internationalisation (`_i18n.py`) qui résout chaque libellé à partir d'un dictionnaire de clés selon la langue sélectionnée dans la barre latérale.
+
+La barre latérale expose le titre de l'application, le sélecteur de langue et l'URL de l'API configurée. La navigation entre les sept pages s'effectue depuis ce même panneau. Toutes les données affichées sont récupérées en temps réel depuis l'API REST via un client HTTP dédié (`api_client.py`) ; aucune donnée n'est mise en cache localement dans l'application.
+
+## 7.2. Vue d'ensemble
+
+La page d'accueil présente une synthèse immédiate de l'état du système. Trois métriques sont affichées en en-tête : 2 122 détections totales, 6 capteurs actifs et 89 espèces identifiées. Sous ces indicateurs, un graphique en anneau présente la part des dix espèces les plus détectées, avec *Turdus merula* (18,8 %) et *Parus major* (13,2 %) en tête, tandis qu'un histogramme horizontal compare le volume de détections par capteur. Le Capteur UFR Sciences domine avec environ 650 détections, suivi des capteurs Zone Boisée Nord et Jardin Paysager (environ 590 chacun), puis des capteurs de test avec un volume nettement inférieur. Ces deux graphiques permettent d'identifier les espèces et les sites les plus actifs, et de repérer d'éventuels déséquilibres de couverture entre capteurs.
+
+![Indicateurs clés, anneau des espèces dominantes et détections par capteur](images/dashboard/vue_ensemble1.png){#fig-dash-overview1}
+
+La carte de chaleur croise les 24 heures de la journée (axe X) et les jours de la semaine (axe Y), l'intensité représentant le nombre de détections. Sur les données affichées (mercredi, jeudi, vendredi), on observe deux fenêtres d'activité : un pic matinal entre 3 h et 6 h, correspondant au chœur de l'aube, et une activité diurne entre 13 h et 16 h. Cette représentation est utile pour calibrer les plages d'enregistrement et vérifier que le comportement acoustique est cohérent avec la biologie des espèces.
+
+![Carte de chaleur de l'activité par heure et par jour](images/dashboard/vue_ensemble2.png){#fig-dash-overview2}
+
+L'histogramme de l'activité des 100 derniers enregistrements, répartis sur trois jours (13 au 15 mai 2026), révèle des pics ponctuels, notamment 16 détections dans la nuit du 13 au 14 mai autour de minuit. Ce graphique permet de repérer des événements exceptionnels dans le flux de détections ou d'identifier des périodes de silence anormal pouvant signaler une panne.
+
+![Histogramme de l'activité de détection sur les 100 derniers enregistrements](images/dashboard/vue_ensemble3.png){#fig-dash-overview3}
+
+Le tableau d'activité récente liste les 10 dernières détections avec horodatage, nom scientifique, identifiant du capteur et score de confiance affiché sous forme de barre colorée. Il offre une vérification immédiate de la fraîcheur des données et de la qualité des détections en cours.
+
+![Tableau des 10 dernières détections avec score de confiance](images/dashboard/vue_ensemble4.png){#fig-dash-overview4}
+
+## 7.3. Explorateur de détections
+
+La page de détections permet de filtrer l'ensemble des enregistrements par nom d'espèce (nom scientifique), identifiant de capteur et limite de résultats (jusqu'à 500). Un compteur indique le nombre d'enregistrements correspondants sur le total de la base.
+
+L'histogramme des scores de confiance, calculé sur 100 enregistrements, montre une distribution relativement uniforme entre 0,80 et 0,98, avec une légère concentration autour de 0,80. Ce profil est attendu avec un seuil fixé à 0,80 : la majorité des détections retenues se situent juste au-dessus du seuil, les détections très confiantes (supérieures à 0,95) restant minoritaires. Le classement horizontal identifie *Curruca atricapilla* (15 occurrences) et *Hirundo rustica* (12) comme les espèces les plus fréquentes dans la fenêtre filtrée.
+
+![Distribution des scores de confiance et classement des espèces](images/dashboard/detections1.png){#fig-dash-det1}
+
+Le nuage de points chronologique place les espèces en axe Y et le temps en axe X (13 au 15 mai 2026), chaque point étant coloré selon son score de confiance. Cette vue permet de visualiser la co-occurrence temporelle de plusieurs espèces, d'identifier celles présentes uniquement à certaines heures et de repérer des détections isolées pouvant signaler des passages ponctuels.
+
+![Chronologie des détections de 13 espèces sur 3 jours](images/dashboard/detections2.png){#fig-dash-det2}
+
+Le tableau interactif liste l'ensemble des détections filtrées avec horodatage précis, espèce, capteur et barre de confiance. Il permet un audit ligne par ligne des données brutes, utile pour vérifier des détections douteuses.
+
+![Tableau interactif des enregistrements filtrés](images/dashboard/detections3.png){#fig-dash-det3}
+
+## 7.4. Tendances
+
+La page de tendances s'appuie sur les 1 000 détections les plus récentes pour rendre compte de l'évolution de l'activité ornithologique dans le temps.
+
+La courbe du nombre de détections quotidiennes montre une montée progressive de 22 détections le 13 mai à un pic de 44 le 14 mai, suivie d'une redescente à 31 le 15 mai. Cette variation journalière peut refléter des conditions météorologiques, des mouvements migratoires ou la variabilité naturelle de l'activité acoustique.
+
+![Nombre de détections quotidiennes](images/dashboard/tendances1.png){#fig-dash-trend1}
+
+La courbe de richesse spécifique (espèces uniques par jour) reste quasi-stable autour de 16 espèces, ce qui indique une diversité cohérente malgré les variations de volume total. Le diagramme polaire des détections par heure confirme le patron bimodal : un pic très marqué entre 3 h et 5 h du matin (jusqu'à 14 détections par heure) et une activité secondaire entre 15 h et 20 h. La richesse spécifique mesure la diversité tandis que le diagramme polaire révèle les rythmes circadiens ; les deux sont complémentaires pour interpréter les données.
+
+![Richesse spécifique quotidienne et diagramme polaire de l'activité horaire](images/dashboard/tendances2.png){#fig-dash-trend2}
+
+Le graphique multi-courbes des cinq espèces les plus fréquentes (*Curruca atricapilla*, *Erithacus rubecula*, *Hirundo rustica*, *Luscinia megarhynchos*, *Turdus merula*) montre qu'*Hirundo rustica* présente le pic le plus élevé (8 détections le 14 mai) tandis que *Curruca atricapilla* maintient une présence plus régulière. Ce suivi comparatif permet de repérer des dynamiques de population ou des phénomènes migratoires différenciés entre espèces.
+
+![Évolution quotidienne des 5 espèces les plus détectées](images/dashboard/tendances3.png){#fig-dash-trend3}
+
+## 7.5. Suivi des déplacements
+
+Cette page infère les trajets inter-capteurs d'une espèce sélectionnée en identifiant des détections successives de cette même espèce sur des capteurs différents au sein d'une fenêtre temporelle configurable (de 5 à 240 minutes). Le mécanisme repose exclusivement sur les horodatages et les identifiants de capteurs, sans données GPS embarquées sur les individus.
+
+Trois paramètres pilotent l'analyse : le choix de l'espèce (ici *Turdus merula*, le Merle noir), la fenêtre de déplacement (60 minutes) et la limite de détections à charger (500). Le résumé indique 100 détections réparties sur 3 capteurs.
+
+![Panneau de contrôle du suivi par espèce](images/dashboard/mouvement1.png){#fig-dash-mv1}
+
+Le nuage de points chronologique représente les détections de *Turdus merula* sur les trois capteurs du campus entre avril et mi-mai 2026. Les lignes en pointillés orangés relient les paires de détections constituant un déplacement inféré, révélant que le Merle noir circule régulièrement entre les trois zones, en particulier entre le Capteur UFR Sciences et les deux autres sites. La couleur de chaque point reflète le score de confiance associé à la détection.
+
+![Chronologie des détections de Turdus merula par capteur](images/dashboard/mouvement2.png){#fig-dash-mv2}
+
+La carte OpenStreetMap du campus positionne les trois capteurs par leurs coordonnées GPS et superpose des arcs orangés matérialisant les déplacements inférés. L'épaisseur de chaque arc est proportionnelle au nombre de transitions observées, permettant d'identifier les corridors de circulation les plus fréquents.
+
+![Carte des déplacements inférés sur le campus](images/dashboard/mouvement3.png){#fig-dash-mv3}
+
+Le tableau des 17 déplacements inférés liste pour chaque transition la date et l'heure de départ, le capteur d'origine, le capteur de destination et le delta temporel en minutes. Les deltas varient de 8,8 à 51 minutes, ce qui est cohérent avec les distances entre capteurs sur le campus. Un résumé agrégé indique les paires les plus fréquentes et leur delta moyen.
+
+![Tableau des déplacements inférés avec deltas temporels](images/dashboard/mouvement4.png){#fig-dash-mv4}
+
+## 7.6. Réseau de capteurs
+
+La carte OpenStreetMap affiche les capteurs géolocalisés sur le campus Moulin de la Housse, colorés selon leur volume de détections. Cette vue géographique est utile pour vérifier la couverture spatiale du réseau et repérer d'éventuelles zones sans capteur.
+
+![Carte du campus avec les capteurs géolocalisés](images/dashboard/capteurs1.png){#fig-dash-sen1}
+
+L'histogramme horizontal confirme la domination du Capteur UFR Sciences (environ 650 détections), suivi de près par les capteurs Zone Boisée Nord et Jardin Paysager (environ 590 chacun), puis du capteur Testing (environ 200) et des prototypes Raspberry Pi. Le graphique en anneau exprime les mêmes données en parts relatives : les trois capteurs opérationnels représentent chacun environ 28 à 32 % du total, ce qui valide une couverture équilibrée du réseau.
+
+![Volume de détections par capteur et parts relatives](images/dashboard/capteurs2.png){#fig-dash-sen2}
+
+Le répertoire détaille pour chaque nœud son identifiant technique, sa description d'emplacement, son nombre total de détections et sa date de dernière connexion. Les emplacements illustrent la diversité des environnements couverts : avant-toit d'un bâtiment universitaire, chêne centenaire en lisière boisée, buissons du jardin paysager. La date de dernière connexion permet de détecter immédiatement un capteur hors ligne.
+
+![Répertoire des capteurs avec emplacements et dates de connexion](images/dashboard/capteurs3.png){#fig-dash-sen3}
+
+## 7.7. Statistiques des espèces
+
+Le treemap représente les 89 espèces détectées, la surface de chaque case étant proportionnelle au nombre de détections. *Turdus merula* (172 détections) occupe la plus grande surface, suivi de *Parus major* (135), *Curruca atricapilla* (111), *Erithacus rubecula* (110) et *Passer domesticus* (108). Les espèces rares apparaissent sous forme de micro-cases. On note la présence d'entrées telles que « Gun\_Gun » (10) et « Human vocal » (20), qui sont des faux positifs illustrant les limites du seuil de confiance à 0,80 et justifient une vigilance sur la qualité des données.
+
+![Treemap de diversité des 89 espèces détectées](images/dashboard/especes1.png){#fig-dash-sp1}
+
+L'histogramme horizontal du top 15, dont le nombre d'espèces est ajustable par curseur, confirme *Turdus merula* (172 détections) comme l'espèce largement dominante. *Parus major* (135) arrive en deuxième position, suivi d'un groupe compact de quatre espèces entre 104 et 111 détections.
+
+![Classement des 15 espèces les plus détectées](images/dashboard/especes2.png){#fig-dash-sp2}
+
+Le tableau complet, trié par volume décroissant, fournit pour chaque espèce son nom scientifique, son total de détections et la date de sa dernière observation. Ces informations permettent d'identifier des espèces migratrices de passage dont la dernière détection est ancienne et de suivre l'évolution de chaque taxon dans le temps.
+
+![Tableau exhaustif des espèces avec dates de dernière observation](images/dashboard/especes3.png){#fig-dash-sp3}
+
+## 7.8. Analyse audio
+
+La page d'analyse audio permet d'importer un fichier audio (WAV, MP3, OGG ou FLAC, jusqu'à 200 Mo) et génère via librosa [@librosa] la forme d'onde temporelle, le spectrogramme Mel en décibels (128 bandes Mel, colormap *magma*) et le spectrogramme log-fréquentiel par transformée de Fourier à court terme. Ces représentations sont utiles pour évaluer la qualité des enregistrements produits par les workers, notamment le rapport signal/bruit et la présence de parasites. Elles permettent aussi de comprendre visuellement les structures acoustiques que BirdNET analyse et d'expliquer pourquoi certaines détections obtiennent un score de confiance faible ou constituent des faux positifs liés à des sons environnementaux.
+
+![Interface d'import audio et outils de visualisation acoustique](images/dashboard/audio1.png){#fig-dash-audio1}
+
+Après chargement d'un fichier, trois indicateurs sont affichés : la fréquence d'échantillonnage (44 100 Hz, conforme aux exigences de BirdNET), la durée (8,10 s, correspondant à un segment type produit par le worker) et le nombre d'échantillons (357 120). La forme d'onde temporelle représente l'amplitude en fonction du temps : le silence initial suivi de séquences de vocalisations distinctes, reconnaissables à leurs pics d'amplitude répétés entre 2 s et 7 s, est caractéristique d'un enregistrement de chant d'oiseau en milieu naturel.
+
+![Lecteur audio, indicateurs techniques et forme d'onde temporelle](images/dashboard/audio2.png){#fig-dash-audio2}
+
+Le spectrogramme Mel représente l'énergie du signal en fonction du temps (axe X) et de la fréquence sur une échelle Mel (axe Y), l'intensité allant du bleu foncé (silence) au jaune (énergie maximale). Les vocalisations apparaissent sous forme de traits verticaux brillants concentrés entre 512 Hz et 4 096 Hz, plage typique des chants d'oiseaux chanteurs. Cette représentation est directement analogue à l'entrée que BirdNET traite, ce qui permet de comprendre visuellement sur quelle base le modèle effectue ses prédictions.
+
+![Spectrogramme Mel de l'enregistrement avec les vocalisations visibles](images/dashboard/audio3.png){#fig-dash-audio3}
 
 # 8. Performance et robustesse {#performance}
 
