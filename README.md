@@ -239,8 +239,9 @@ La documentation interactive complète est disponible à la racine de l'API (ex 
 
 # 📃 • Crédits
 
-- [Paul Bayfield](https://github.com/PaulBayfield) - Développeur principal
-- [BirdNET Team](https://github.com/birdnet-team/BirdNET-Analyzer) - Modèle d'analyse acoustique
+- [Paul Bayfield](https://github.com/PaulBayfield)
+- [Lucas Charmettan](https://github.com/LucasCrmt)
+- [BirdNET Team](https://github.com/birdnet-team/BirdNET-Analyzer)
 
 # 📝 • License
 
