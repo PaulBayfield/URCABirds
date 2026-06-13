@@ -1,5 +1,8 @@
 import streamlit as st
 
+# Dictionnaire de traductions indexé par langue puis par clé de texte.
+# Chaque clé peut contenir des placeholders Python ({n}, {total}, etc.)
+# qui sont interpolés à l'appel via la fonction t().
 _T: dict[str, dict[str, str]] = {
     "Français": {
         # sidebar / app
@@ -299,16 +302,43 @@ _T: dict[str, dict[str, str]] = {
     },
 }
 
+# Liste des langues disponibles, dans l'ordre où elles apparaissent dans le dictionnaire
 LANGUAGES = list(_T.keys())
 
 
 def t(key: str, **kwargs) -> str:
+    """Retourne la traduction d'une clé dans la langue active de la session.
+
+    Si la langue active n'existe pas dans ``_T``, repli automatique sur le français.
+    Si la clé est absente, retourne la clé elle-même (comportement fail-soft).
+
+    Args:
+        key: Clé de traduction (ex. ``"overview.header"``).
+        **kwargs: Variables à interpoler dans le texte traduit
+            (ex. ``t("species.caption", n=5, total=100)``).
+
+    Returns:
+        Texte traduit et interpolé dans la langue courante.
+    """
     lang = st.session_state.get("lang", "Français")
+    # Repli sur le français si la langue demandée n'existe pas
     text = _T.get(lang, _T["Français"]).get(key, key)
+    # Interpolation des variables (ex: t("species.caption", n=5, total=100))
     return text.format(**kwargs) if kwargs else text
 
 
 def day_map() -> dict[str, str]:
+    """Construit un dictionnaire de correspondance anglais → langue active pour les jours.
+
+    Returns:
+        Dictionnaire dont les clés sont les noms anglais des jours
+        (``"Monday"``, …, ``"Sunday"``) et les valeurs leurs traductions
+        dans la langue active de la session.
+
+    Example:
+        >>> # En français : {"Monday": "Lundi", "Tuesday": "Mardi", ...}
+        >>> # En anglais : {"Monday": "Monday", "Tuesday": "Tuesday", ...}
+    """
     lang = st.session_state.get("lang", "Français")
     return {
         en: _T[lang][f"day.{en}"]
@@ -317,4 +347,12 @@ def day_map() -> dict[str, str]:
 
 
 def day_order() -> list[str]:
+    """Retourne la liste ordonnée des jours de la semaine dans la langue active.
+
+    L'ordre est défini par la clé ``"day_order"`` du dictionnaire de traductions,
+    ce qui permet d'adapter le premier jour de la semaine selon la locale.
+
+    Returns:
+        Liste de noms de jours traduits, du premier au dernier jour de la semaine.
+    """
     return t("day_order").split(",")

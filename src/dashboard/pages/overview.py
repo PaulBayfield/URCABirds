@@ -8,8 +8,24 @@ from pages._i18n import t, day_map, day_order
 
 
 def render():
+    """Affiche la page de vue d'ensemble du système de surveillance.
+
+    Charge en parallèle les capteurs, les espèces et les détections récentes,
+    puis présente :
+
+    - **Trois métriques** : nombre total de détections, capteurs actifs, espèces identifiées.
+    - **Camembert** des 10 espèces les plus détectées.
+    - **Barres horizontales** des détections par capteur.
+    - **Heatmap** Heure × Jour de la semaine (sur les 500 dernières détections).
+    - **Histogramme** de l'activité de détection dans le temps.
+    - **Tableau** des 10 détections les plus récentes.
+    """
     st.header(t("overview.header"))
 
+    # Chargement parallèle des données nécessaires à la page
+    # - sensors / species : listes complètes pour les comptages globaux
+    # - meta (limit=1) : récupère uniquement le total sans charger les détections
+    # - recent (limit=500) : utilisé pour la heatmap et l'histogramme
     with st.spinner(t("loading")):
         sensors = client.get_sensors()
         species = client.get_species()
@@ -20,6 +36,7 @@ def render():
     active_sensors = len(sensors)
     total_species = len(species)
 
+    # Cartes de métriques clés en haut de page
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric(t("overview.metric.total"), f"{total_detections:,}",
@@ -36,6 +53,7 @@ def render():
     col_a, col_b = st.columns(2)
 
     with col_a:
+        # Camembert des 10 espèces les plus détectées
         if species:
             sp_df = pd.DataFrame(species)
             if "total_detections" in sp_df.columns:
@@ -51,6 +69,7 @@ def render():
                 st.plotly_chart(fig, use_container_width=True)
 
     with col_b:
+        # Barres horizontales des détections par capteur (triées par volume)
         if sensors:
             sen_df = pd.DataFrame(sensors)
             if "total_detections" in sen_df.columns:
@@ -65,6 +84,7 @@ def render():
                 fig.update_layout(coloraxis_showscale=False, **LAYOUT)
                 st.plotly_chart(fig, use_container_width=True)
 
+    # Section heatmap + histogramme (requiert des détections récentes)
     detections_list = recent.get("detections", [])
     if detections_list:
         trend_df = pd.DataFrame(detections_list)
@@ -72,13 +92,16 @@ def render():
         trend_df["hour"] = trend_df["timestamp"].dt.hour
         trend_df["day_of_week"] = trend_df["timestamp"].dt.day_name()
 
+        # Traduction des noms de jours dans la langue active
         dm = day_map()
         trend_df["day_label"] = trend_df["day_of_week"].map(dm)
         dorder = day_order()
 
+        # Construction du pivot Jour × Heure pour la heatmap
         heatmap_data = trend_df.groupby(["day_label", "hour"]).size().reset_index(name="count")
         pivot = heatmap_data.pivot(index="day_label", columns="hour", values="count").fillna(0)
         pivot = pivot.reindex([d for d in dorder if d in pivot.index])
+        # Garantit que toutes les 24 heures sont présentes même sans données
         for h in range(24):
             if h not in pivot.columns:
                 pivot[h] = 0
@@ -95,6 +118,7 @@ def render():
         fig_heat.update_layout(**LAYOUT)
         st.plotly_chart(fig_heat, use_container_width=True)
 
+        # Histogramme temporel : distribution des détections dans le temps
         fig_trend = px.histogram(
             trend_df, x="timestamp",
             title=t("overview.histogram.title", n=len(detections_list)),
@@ -105,6 +129,7 @@ def render():
         fig_trend.update_layout(bargap=0.05, yaxis_title=t("detections"), **LAYOUT)
         st.plotly_chart(fig_trend, use_container_width=True)
 
+    # --- Tableau des 10 dernières détections ---
     st.divider()
     st.subheader(t("overview.recent.header"))
     recent10 = client.get_detections(limit=10)
